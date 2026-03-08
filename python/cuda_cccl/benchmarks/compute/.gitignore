@@ -13,3 +13,6 @@ __pycache__/
 
 # Benchmark results
 results*/
+
+# Pixi
+.pixi/

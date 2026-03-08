@@ -4,16 +4,12 @@ Compare Python `cuda.compute` performance against C++ CUB implementations.
 
 ## Setup
 
-```bash
-conda env create -f environment.yml
-conda activate cuda-compute-bench
-```
+This project uses [pixi](https://pixi.sh) to manage environments and dependencies.
 
-Install `cuda.compute`:
+Two environments are available:
 
-```bash
-conda install -c conda-forge cccl-python
-```
+- **`wheel`** - Uses the released `cuda-cccl` package
+- **`source`** - Builds `cuda-cccl` from the local repository
 
 ### Build C++ Benchmarks
 
@@ -28,42 +24,66 @@ Binaries are built to: `build/cub/bin/`
 
 ## Run Benchmarks
 
+### Using pixi tasks
+
 ```bash
-# Run both C++ and Python (default)
-python run_benchmarks.py -b transform/fill -d 0
+# Run Python benchmarks (released cuda-cccl)
+pixi run -e wheel bench
 
-# Run only C++
-python run_benchmarks.py -b transform/fill --cpp
+# Run Python benchmarks (local source build)
+pixi run -e source bench
 
-# Run only Python
-python run_benchmarks.py -b transform/fill --py
+# Run Python benchmarks with reduced parameter set
+pixi run -e wheel bench-quick
 
-# Show help
-python run_benchmarks.py --help
+# Run just one benchmark
+pixi run -e wheel bench -b transform/fill
+
+# Run C++ benchmarks
+pixi run -e wheel bench-cpp
+
+# Run both Python and C++ benchmarks
+pixi run -e wheel bench-all
 ```
 
-To run the benchmarks using the "quick" configuration, run:
+### Using run_benchmarks.py directly
 
 ```bash
-python run_benchmarks.py --quick
+# Run both C++ and Python (default)
+pixi run -e wheel python run_benchmarks.py -b transform/fill -d 0
+
+# Run only C++
+pixi run -e wheel python run_benchmarks.py -b transform/fill --cpp
+
+# Run only Python
+pixi run -e wheel python run_benchmarks.py -b transform/fill --py
+
+# Show help
+pixi run -e wheel python run_benchmarks.py --help
+```
+
+To run the benchmarks using the "quick" configuration:
+
+```bash
+pixi run -e wheel python run_benchmarks.py --quick
 ```
 
 ## Compare Results
 
 ```bash
-python analysis/python_vs_cpp_summary.py -b transform/fill
+pixi run -e wheel python analysis/python_vs_cpp_summary.py -b transform/fill
 ```
 
 ## Web Report
 
-A sinple page used to visualize a ser of results.
+A simple page used to visualize a set of results.
 
 - Requires `results/` to be populated with benchmark results.
 
 First generate a manifest:
 
 ```bash
-python analysis/generate_web_report_manifest.py \
+pixi run -e wheel python analysis/generate_web_report_manifest.py \
   --results-dir results \
   --output results/manifest.json
 ```
@@ -91,7 +111,7 @@ Now its possible to share the results directory as a zip/tar file.
 
 ```bash
 # Python
-python transform/fill.py --list
+pixi run -e wheel python transform/fill.py --list
 
 # C++
 /path/to/cccl/build/cub/bin/cub.bench.transform.fill.base --list
@@ -101,7 +121,7 @@ python transform/fill.py --list
 
 ```bash
 # Python - specific type and size
-python transform/fill.py --axis "T=I32" --axis "Elements[pow2]=20" --devices 0
+pixi run -e wheel python transform/fill.py --axis "T=I32" --axis "Elements[pow2]=20" --devices 0
 
 # C++ - save JSON
 /path/to/cccl/build/cub/bin/cub.bench.transform.fill.base \
@@ -112,7 +132,7 @@ python transform/fill.py --axis "T=I32" --axis "Elements[pow2]=20" --devices 0
 ### Compare manually
 
 ```bash
-python analysis/python_vs_cpp_summary.py \
+pixi run -e wheel python analysis/python_vs_cpp_summary.py \
   results/transform/fill_py.json \
   results/transform/fill_cpp.json \
   --device 0
