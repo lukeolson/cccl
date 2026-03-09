@@ -48,25 +48,25 @@ def run_segmented_sort(
     num_segments,
 ):
     sorter = make_segmented_sort(
-        d_in_keys=d_in_keys,
-        d_out_keys=d_out_keys,
-        d_in_values=d_in_values,
-        d_out_values=d_out_values,
-        start_offsets_in=start_offsets,
-        end_offsets_in=end_offsets,
-        order=SortOrder.ASCENDING,
+        d_in_keys,
+        d_out_keys,
+        d_in_values,
+        d_out_values,
+        start_offsets,
+        end_offsets,
+        SortOrder.ASCENDING,
     )
 
     temp_storage_bytes = sorter(
-        temp_storage=None,
-        d_in_keys=d_in_keys,
-        d_out_keys=d_out_keys,
-        d_in_values=d_in_values,
-        d_out_values=d_out_values,
-        num_items=num_items,
-        num_segments=num_segments,
-        start_offsets_in=start_offsets,
-        end_offsets_in=end_offsets,
+        None,
+        d_in_keys,
+        d_out_keys,
+        d_in_values,
+        d_out_values,
+        num_items,
+        num_segments,
+        start_offsets,
+        end_offsets,
     )
     alloc_stream = as_cupy_stream(state.get_stream())
     with alloc_stream:
@@ -74,16 +74,16 @@ def run_segmented_sort(
 
     def launcher(launch: bench.Launch):
         sorter(
-            temp_storage=temp_storage,
-            d_in_keys=d_in_keys,
-            d_out_keys=d_out_keys,
-            d_in_values=d_in_values,
-            d_out_values=d_out_values,
-            num_items=num_items,
-            num_segments=num_segments,
-            start_offsets_in=start_offsets,
-            end_offsets_in=end_offsets,
-            stream=launch.get_stream(),
+            temp_storage,
+            d_in_keys,
+            d_out_keys,
+            d_in_values,
+            d_out_values,
+            num_items,
+            num_segments,
+            start_offsets,
+            end_offsets,
+            launch.get_stream(),
         )
 
     exec_tag = getattr(bench, "exec_tag", None)

@@ -46,22 +46,16 @@ def bench_merge_sort_keys(state: bench.State):
 
     alloc_stream.synchronize()
 
-    sorter = make_merge_sort(
-        d_in_keys=d_in_keys,
-        d_in_items=None,
-        d_out_keys=d_out_keys,
-        d_out_items=None,
-        op=OpKind.LESS,
-    )
+    sorter = make_merge_sort(d_in_keys, None, d_out_keys, None, OpKind.LESS)
 
     temp_storage_bytes = sorter(
-        temp_storage=None,
-        d_in_keys=d_in_keys,
-        d_in_items=None,
-        d_out_keys=d_out_keys,
-        d_out_items=None,
-        op=OpKind.LESS,
-        num_items=num_elements,
+        None,
+        d_in_keys,
+        None,
+        d_out_keys,
+        None,
+        OpKind.LESS,
+        num_elements,
     )
     with alloc_stream:
         temp_storage = cp.empty(temp_storage_bytes, dtype=np.uint8)
@@ -72,14 +66,14 @@ def bench_merge_sort_keys(state: bench.State):
 
     def launcher(launch: bench.Launch):
         sorter(
-            temp_storage=temp_storage,
-            d_in_keys=d_in_keys,
-            d_in_items=None,
-            d_out_keys=d_out_keys,
-            d_out_items=None,
-            op=OpKind.LESS,
-            num_items=num_elements,
-            stream=launch.get_stream(),
+            temp_storage,
+            d_in_keys,
+            None,
+            d_out_keys,
+            None,
+            OpKind.LESS,
+            num_elements,
+            launch.get_stream(),
         )
 
     state.exec(launcher, batched=False)
