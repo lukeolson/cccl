@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import cupy as cp
 import numpy as np
 from utils import SIGNED_TYPES as TYPE_MAP
-from utils import as_cupy_stream
+from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import OpKind, TransformIterator, make_reduce_into
@@ -38,11 +38,7 @@ def bench_transform_reduce_sum(state: bench.State):
 
     alloc_stream = as_cupy_stream(state.get_stream())
     with alloc_stream:
-        if np.issubdtype(dtype, np.integer):
-            d_in = cp.random.randint(0, 100, size=num_items, dtype=dtype)
-        else:
-            d_in = cp.random.random(num_items, dtype=dtype)
-
+        d_in = generate_data_with_entropy(num_items, dtype, "1.000", alloc_stream)
         d_out = cp.empty(1, dtype=dtype)
 
     transform_it = TransformIterator(d_in, square_op)

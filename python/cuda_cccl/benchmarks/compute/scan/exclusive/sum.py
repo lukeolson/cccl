@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import cupy as cp
 import numpy as np
 from utils import SIGNED_TYPES as TYPE_MAP
-from utils import as_cupy_stream
+from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import OpKind, make_exclusive_scan
@@ -32,14 +32,9 @@ def bench_scan_exclusive_sum(state: bench.State):
     dtype = TYPE_MAP[type_str]
     num_items = int(state.get_int64("Elements{io}"))
 
-    # Setup data - use random values like C++ generate()
     alloc_stream = as_cupy_stream(state.get_stream())
     with alloc_stream:
-        if np.issubdtype(dtype, np.integer):
-            d_in = cp.random.randint(0, 100, size=num_items, dtype=dtype)
-        else:
-            d_in = cp.random.random(num_items, dtype=dtype)
-
+        d_in = generate_data_with_entropy(num_items, dtype, "1.000", alloc_stream)
         # Output is same size as input for scan
         d_out = cp.empty(num_items, dtype=dtype)
 

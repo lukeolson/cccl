@@ -26,6 +26,7 @@ from utils import (
 )
 from utils import (
     as_cupy_stream,
+    generate_data_with_entropy,
     generate_fixed_segment_offsets,
 )
 
@@ -50,14 +51,9 @@ def bench_segmented_reduce_custom(state: bench.State):
     )
 
     with alloc_stream:
-        if np.issubdtype(dtype, np.integer):
-            max_val = min(100, np.iinfo(dtype).max)
-            min_val = max(-100, np.iinfo(dtype).min)
-            d_in = cp.random.randint(
-                min_val, max_val + 1, size=actual_elements, dtype=dtype
-            )
-        else:
-            d_in = cp.random.uniform(-100, 100, size=actual_elements).astype(dtype)
+        d_in = generate_data_with_entropy(
+            actual_elements, dtype, "1.000", alloc_stream
+        )
 
         d_out = cp.empty(num_segments, dtype=dtype)
 

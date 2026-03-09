@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import cupy as cp
 import numpy as np
 from utils import SIGNED_TYPES as TYPE_MAP
-from utils import as_cupy_stream
+from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import OpKind, make_reduce_into
@@ -34,13 +34,7 @@ def bench_reduce_min(state: bench.State):
 
     alloc_stream = as_cupy_stream(state.get_stream())
     with alloc_stream:
-        if np.issubdtype(dtype, np.integer):
-            info = np.iinfo(dtype)
-            d_in = cp.random.randint(info.min, info.max, size=num_items, dtype=dtype)
-        else:
-            # For floats, use full range
-            d_in = cp.random.uniform(-1e6, 1e6, size=num_items).astype(dtype)
-
+        d_in = generate_data_with_entropy(num_items, dtype, "1.000", alloc_stream)
         d_out = cp.empty(1, dtype=dtype)
 
     # Initial value for min reduction (max value of type)
