@@ -59,7 +59,7 @@ def bench_select_if(state: bench.State):
         selected_elements = int(cp.count_nonzero(d_in < threshold).get())
         d_out = cp.empty(selected_elements, dtype=dtype)
 
-        d_num_selected = cp.zeros(1, dtype=np.uint64)
+        d_num_selected = cp.zeros(1, dtype=np.int64)
 
     alloc_stream.synchronize()
 

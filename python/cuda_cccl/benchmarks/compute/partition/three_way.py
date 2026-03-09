@@ -106,9 +106,7 @@ def bench_three_way_partition(state: bench.State):
     state.add_element_count(num_elements)
     state.add_global_memory_reads(num_elements * d_in.dtype.itemsize)
     state.add_global_memory_writes(num_elements * d_in.dtype.itemsize)
-    state.add_global_memory_writes(
-        d_num_selected_out.dtype.itemsize
-    )  # num_selected written
+    state.add_global_memory_writes(d_num_selected_out.nbytes)
 
     def launcher(launch: bench.Launch):
         partitioner(

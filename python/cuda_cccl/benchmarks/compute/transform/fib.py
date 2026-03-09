@@ -11,7 +11,7 @@ Notes:
 - Input values are int64 in [0, 42]
 - Output values are uint32
 - Benchmark name is "fibonacci" to match C++
-- Migration: Python fixes offsets to int64; input generation uses CuPy random.
+- Migration: Python fixes offsets to int64.
 - OffsetT axis is omitted because the Python API does not expose offset type.
 """
 
@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import as_cupy_stream
+from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import make_unary_transform
@@ -56,7 +56,14 @@ def bench_transform_fib(state: bench.State):
     try:
         alloc_stream = as_cupy_stream(state.get_stream())
         with alloc_stream:
-            d_in = cp.random.randint(0, 43, size=num_elements, dtype=np.int64)
+            d_in = generate_data_with_entropy(
+                num_elements,
+                np.int64,
+                "1.000",
+                alloc_stream,
+                min_val=np.int64(0),
+                max_val=np.int64(42),
+            )
             d_out = cp.empty(num_elements, dtype=np.uint32)
 
         transformer = make_unary_transform(d_in=d_in, d_out=d_out, op=fib_op)

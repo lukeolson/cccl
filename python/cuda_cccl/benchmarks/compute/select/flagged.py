@@ -10,7 +10,7 @@ C++ equivalent: cub/benchmarks/bench/select/flagged.cu
 Notes:
 - Uses a boolean flag array to select elements
 - Entropy controls the selection probability
-- Migration: Python samples flags independently; C++ uses the same generator for input/flags.
+- Migration: Python omits the C++ InPlace axis but mirrors bool entropy behavior.
 """
 
 import sys
@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import as_cupy_stream, generate_data_with_entropy
+from utils import ENTROPY_TO_PROB, as_cupy_stream, generate_data_with_entropy
 from utils import SIGNED_TYPES as TYPE_MAP
 
 import cuda.bench as bench
@@ -35,24 +35,22 @@ def bench_select_flagged(state: bench.State):
 
     alloc_stream = as_cupy_stream(state.get_stream())
     d_in = generate_data_with_entropy(num_elements, dtype, entropy_str, alloc_stream)
+    probability = ENTROPY_TO_PROB[entropy_str]
     with alloc_stream:
-        # Match C++ generator usage more closely: flags come from a second
-        # entropy-controlled generated sequence, then converted to bool flags.
-        d_flag_values = generate_data_with_entropy(
-            num_elements,
-            np.uint8,
-            entropy_str,
-            alloc_stream,
-            min_val=np.uint8(0),
-            max_val=np.uint8(1),
-        )
-        flags = (d_flag_values != 0).astype(np.uint8)
+        # Match nvbench_helper bool generation semantics:
+        # entropy 1.000 -> all true, 0.000 -> all false, otherwise Bernoulli(p).
+        if probability <= 0.0:
+            flags = cp.zeros(num_elements, dtype=np.uint8)
+        elif probability >= 1.0:
+            flags = cp.ones(num_elements, dtype=np.uint8)
+        else:
+            flags = (cp.random.random(num_elements) < probability).astype(np.uint8)
 
         zip_it = ZipIterator(d_in, flags)
         selected_elements = int(cp.count_nonzero(flags).get())
         d_out = cp.empty(selected_elements, dtype=dtype)
         d_out_flags = cp.empty(selected_elements, dtype=np.uint8)
-        d_num_selected = cp.empty(1, dtype=np.uint64)
+        d_num_selected = cp.empty(1, dtype=np.int64)
 
     def flag_predicate(pair):
         return np.uint8(pair[1] != 0)

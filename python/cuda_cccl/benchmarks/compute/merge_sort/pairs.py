@@ -50,7 +50,9 @@ def bench_merge_sort_pairs(state: bench.State):
     )
 
     with alloc_stream:
-        d_in_values = cp.zeros(num_elements, dtype=value_dtype)
+        d_in_values = generate_data_with_entropy(
+            num_elements, value_dtype, "1.000", alloc_stream
+        )
 
         d_out_keys = cp.empty(num_elements, dtype=key_dtype)
         d_out_values = cp.empty(num_elements, dtype=value_dtype)

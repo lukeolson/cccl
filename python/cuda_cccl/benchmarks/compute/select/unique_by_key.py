@@ -111,7 +111,20 @@ def bench_unique_by_key(state: bench.State):
     with alloc_stream:
         temp_storage = cp.empty(temp_storage_bytes, dtype=np.uint8)
 
-    # Get actual number of unique keys for accurate memory write count
+    # Run once before timing to materialize the number of selected runs,
+    # matching the C++ metric accounting flow.
+    uniquer(
+        temp_storage=temp_storage,
+        d_in_keys=d_in_keys,
+        d_in_items=d_in_values,
+        d_out_keys=d_out_keys,
+        d_out_items=d_out_values,
+        d_out_num_selected=d_num_selected,
+        op=OpKind.EQUAL_TO,
+        num_items=num_elements,
+        stream=alloc_stream,
+    )
+    alloc_stream.synchronize()
     num_runs = int(d_num_selected.get()[0])
 
     state.add_element_count(num_elements)

@@ -74,7 +74,6 @@ def bench_transform_reduce_sum(state: bench.State):
             op=OpKind.PLUS,
             num_items=num_items,
             h_init=h_init,
-            stream=launch.get_stream(),
         )
 
     state.exec(launcher, batched=False)

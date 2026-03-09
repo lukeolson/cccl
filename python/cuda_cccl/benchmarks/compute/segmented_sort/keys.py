@@ -11,7 +11,7 @@ Notes:
 - Implements three sub-benchmarks: power, small, large
 - Power uses power-law segment sizes with Entropy axis
 - Small/large use uniform segment sizes with MaxSegmentSize axis
-- Migration: Power-law offsets use a Zipf approximation; uniform offsets use min_segment_size ~ max/2.
+- Migration: uniform offsets use min_segment_size ~ max/2.
 - OffsetT axis is omitted because the Python API does not expose offset type.
 """
 

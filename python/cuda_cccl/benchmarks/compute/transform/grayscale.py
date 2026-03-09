@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 from utils import FLOAT_TYPES as TYPE_MAP
-from utils import as_cupy_stream
+from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import gpu_struct, make_unary_transform
@@ -45,11 +45,19 @@ def bench_transform_grayscale(state: bench.State):
     try:
         alloc_stream = as_cupy_stream(state.get_stream())
         with alloc_stream:
-            d_pixels = (
-                cp.random.random((num_elements, 3), dtype=dtype)
-                .view(RGB.dtype)
-                .reshape(num_elements)
+            r_data = generate_data_with_entropy(
+                num_elements, dtype, "1.000", alloc_stream
             )
+            g_data = generate_data_with_entropy(
+                num_elements, dtype, "1.000", alloc_stream
+            )
+            b_data = generate_data_with_entropy(
+                num_elements, dtype, "1.000", alloc_stream
+            )
+            d_pixels = cp.empty(num_elements, dtype=RGB.dtype)
+            d_pixels["r"] = r_data
+            d_pixels["g"] = g_data
+            d_pixels["b"] = b_data
             d_out = cp.empty(num_elements, dtype=dtype)
 
         transformer = make_unary_transform(d_in=d_pixels, d_out=d_out, op=to_grayscale)

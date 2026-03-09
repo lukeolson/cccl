@@ -142,30 +142,28 @@ def generate_uniform_segment_offsets(num_elements, min_segment_size, max_segment
     return offsets
 
 
-def generate_power_law_offsets(num_elements, num_segments, zipf_param=1.5):
+def generate_power_law_offsets(num_elements, num_segments):
     if num_segments <= 0:
         return cp.asarray([0, num_elements], dtype=cp.int64)
 
-    sizes = cp.random.zipf(zipf_param, size=num_segments).astype(cp.int64)
-    sizes = cp.maximum(sizes, 1)
+    # Mirror nvbench_helper power-law generation:
+    # draw log-normal samples, normalize to total elements,
+    # floor to integer segment sizes, then distribute remainder
+    # across the first `diff` segments.
+    samples = cp.random.lognormal(3.0, 1.2, size=num_segments)
+    if int(cp.count_nonzero(samples).item()) == 0:
+        samples = cp.ones(num_segments, dtype=cp.float64)
 
-    min_total = num_segments
-    remaining = num_elements - min_total
-    if remaining < 0:
-        remaining = 0
+    sample_sum = float(samples.sum().item())
+    sizes = cp.floor(samples * num_elements / sample_sum).astype(cp.int64)
 
-    scaled = sizes / sizes.sum() * remaining
-    sizes = cp.floor(scaled).astype(cp.int64)
-    remainder = int(remaining - sizes.sum().item())
-    if remainder > 0:
-        sizes[:remainder] += 1
-
-    sizes += 1
+    diff = int(num_elements - sizes.sum().item())
+    if diff > 0:
+        sizes[:diff] += 1
 
     offsets = cp.empty(num_segments + 1, dtype=cp.int64)
     offsets[0] = 0
     offsets[1:] = cp.cumsum(sizes)
-    offsets[-1] = num_elements
     return offsets
 
 
