@@ -430,29 +430,32 @@ packages:
   requires_python: '>=3.10'
 - pypi: ../..
   name: cuda-cccl
-  version: 3.4.0.dev59+gaa762d3f0
-  sha256: 863f465d8243ae90898b7afaddcf3bb0bc2be4d56ec6cd2734151675f0f6d51f
+  version: 3.4.0.dev265+g5f7d7d740
+  sha256: f2a877cf4723e0f06bbd8bfdf92ad481b0e13c321e4c38c96d6ed98efed79822
   requires_dist:
-  - numba>=0.60.0
   - numpy
   - cuda-pathfinder>=1.2.3
   - cuda-core
   - typing-extensions
-  - cuda-bindings>=12.9.1,<13.0.0 ; extra == 'cu12'
-  - cuda-toolkit[cudart,nvcc,nvjitlink,nvrtc]==12.* ; extra == 'cu12'
+  - cuda-bindings>=12.9.1,<13.0.0 ; extra == 'minimal-cu12'
+  - cuda-toolkit[cudart,nvcc,nvjitlink,nvrtc]==12.* ; extra == 'minimal-cu12'
+  - cuda-bindings>=13.0.0,<14.0.0 ; extra == 'minimal-cu13'
+  - cuda-toolkit[cudart,nvcc,nvjitlink,nvrtc,nvvm]==13.* ; extra == 'minimal-cu13'
+  - cuda-cccl[minimal-cu12] ; extra == 'cu12'
+  - numba>=0.60.0 ; extra == 'cu12'
   - numba-cuda[cu12]>=0.23.0,<0.27.0 ; extra == 'cu12'
-  - cuda-bindings>=13.0.0,<14.0.0 ; extra == 'cu13'
-  - cuda-toolkit[cudart,nvcc,nvjitlink,nvrtc,nvvm]==13.* ; extra == 'cu13'
+  - cuda-cccl[minimal-cu13] ; extra == 'cu13'
+  - numba>=0.60.0 ; extra == 'cu13'
   - numba-cuda[cu13]>=0.23.0,<0.27.0 ; extra == 'cu13'
   - cuda-cccl[cu12] ; extra == 'test-cu12'
   - pytest ; extra == 'test-cu12'
   - pytest-xdist ; extra == 'test-cu12'
-  - cupy-cuda12x ; extra == 'test-cu12'
+  - cupy-cuda12x<14.0.0 ; extra == 'test-cu12'
   - pytest-benchmark ; extra == 'test-cu12'
   - cuda-cccl[cu13] ; extra == 'test-cu13'
   - pytest ; extra == 'test-cu13'
   - pytest-xdist ; extra == 'test-cu13'
-  - cupy-cuda13x ; extra == 'test-cu13'
+  - cupy-cuda13x<14.0.0 ; extra == 'test-cu13'
   - pytest-benchmark ; extra == 'test-cu13'
   - cuda-cccl[cu12] ; extra == 'bench-cu12'
   - cuda-bench[cu12] ; extra == 'bench-cu12'

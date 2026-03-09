@@ -33,6 +33,7 @@ Examples:
 """
 
 import argparse
+import os
 import shlex
 import subprocess
 import sys
@@ -225,14 +226,16 @@ def get_log_path(benchmark: str, suffix: str) -> Path:
     return RESULTS_DIR / "logs" / bench_path.parent / f"{bench_path.name}_{suffix}.log"
 
 
-def run_and_log(cmd: list, log_path: Path) -> dict:
+def run_and_log(cmd: list, log_path: Path, env: dict | None = None) -> dict:
     """Run command and write stdout/stderr to log file."""
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with open(log_path, "w", encoding="utf-8") as log_file:
         log_file.write(f"Command: {shlex.join(cmd)}\n\n")
         log_file.flush()
         try:
-            result = subprocess.run(cmd, check=False, stdout=log_file, stderr=log_file)
+            result = subprocess.run(
+                cmd, check=False, stdout=log_file, stderr=log_file, env=env
+            )
         except Exception as exc:  # noqa: BLE001
             log_file.write("\nERROR: Runner failed to execute command.\n")
             log_file.write(f"{exc}\n")
@@ -315,7 +318,15 @@ def run_benchmark(
 
         cmd = [str(cpp_bin), "--json", str(cpp_result), "--devices", device]
         cmd.extend(cpp_axis_args)
-        cpp_status = run_and_log(cmd, cpp_log)
+        # Ensure the CUB build lib dir (containing libnvbench.so) is on the
+        # dynamic linker search path for the child process.
+        cpp_lib_dir = str(CUB_BENCH_DIR.parent / "lib")
+        cpp_env = os.environ.copy()
+        existing_ld = cpp_env.get("LD_LIBRARY_PATH", "")
+        cpp_env["LD_LIBRARY_PATH"] = (
+            f"{cpp_lib_dir}:{existing_ld}" if existing_ld else cpp_lib_dir
+        )
+        cpp_status = run_and_log(cmd, cpp_log, env=cpp_env)
         print(f"  Results: {cpp_result}")
         print(f"  Log: {cpp_log}")
         if cpp_status["status"] != "ok":
