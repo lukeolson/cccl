@@ -29,6 +29,15 @@ ENTROPY_TO_STEPS = {
     "0.000": 0,
 }
 
+ENTROPY_TO_PROB = {
+    "1.000": 1.0,
+    "0.811": 0.811,
+    "0.544": 0.544,
+    "0.337": 0.337,
+    "0.201": 0.201,
+    "0.000": 0.0,
+}
+
 
 def as_cupy_stream(cs: bench.CudaStream) -> cp.cuda.Stream:
     """Convert nvbench CudaStream to CuPy Stream."""
