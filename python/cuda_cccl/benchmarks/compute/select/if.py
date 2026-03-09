@@ -52,7 +52,9 @@ def bench_select_if(state: bench.State):
 
     alloc_stream = as_cupy_stream(state.get_stream())
 
-    d_in = generate_data_with_entropy(num_elements, dtype, entropy_str, alloc_stream)
+    # Match C++ benchmark: input data generation is independent of Entropy.
+    # Entropy only controls the selection threshold.
+    d_in = generate_data_with_entropy(num_elements, dtype, "1.000", alloc_stream)
     with alloc_stream:
         selected_elements = int(cp.count_nonzero(d_in < threshold).get())
         d_out = cp.empty(selected_elements, dtype=dtype)

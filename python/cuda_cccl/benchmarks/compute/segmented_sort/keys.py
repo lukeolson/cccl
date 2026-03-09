@@ -40,8 +40,6 @@ def run_segmented_sort(
     state: bench.State,
     d_in_keys,
     d_out_keys,
-    d_in_values,
-    d_out_values,
     start_offsets,
     end_offsets,
     num_items,
@@ -50,8 +48,8 @@ def run_segmented_sort(
     sorter = make_segmented_sort(
         d_in_keys,
         d_out_keys,
-        d_in_values,
-        d_out_values,
+        None,
+        None,
         start_offsets,
         end_offsets,
         SortOrder.ASCENDING,
@@ -61,8 +59,8 @@ def run_segmented_sort(
         None,
         d_in_keys,
         d_out_keys,
-        d_in_values,
-        d_out_values,
+        None,
+        None,
         num_items,
         num_segments,
         start_offsets,
@@ -77,8 +75,8 @@ def run_segmented_sort(
             temp_storage,
             d_in_keys,
             d_out_keys,
-            d_in_values,
-            d_out_values,
+            None,
+            None,
             num_items,
             num_segments,
             start_offsets,
@@ -128,8 +126,6 @@ def bench_segmented_sort(state: bench.State, use_power_law: bool):
     d_in_keys = generate_data_with_entropy(num_elements, dtype, entropy_str, alloc_stream)
     with alloc_stream:
         d_out_keys = cp.empty(num_elements, dtype=dtype)
-        d_in_values = cp.arange(num_elements, dtype=dtype)
-        d_out_values = cp.empty(num_elements, dtype=dtype)
 
         start_offsets = cp.asarray(offsets[:-1], dtype=np.int64)
         end_offsets = cp.asarray(offsets[1:], dtype=np.int64)
@@ -139,17 +135,13 @@ def bench_segmented_sort(state: bench.State, use_power_law: bool):
 
     state.add_element_count(num_elements)
     state.add_global_memory_reads(num_elements * d_in_keys.dtype.itemsize)
-    state.add_global_memory_reads(num_elements * d_in_values.dtype.itemsize)
     state.add_global_memory_writes(num_elements * d_out_keys.dtype.itemsize)
-    state.add_global_memory_writes(num_elements * d_out_values.dtype.itemsize)
     state.add_global_memory_reads((num_segments + 1) * start_offsets.dtype.itemsize)
 
     run_segmented_sort(
         state,
         d_in_keys,
         d_out_keys,
-        d_in_values,
-        d_out_values,
         start_offsets,
         end_offsets,
         num_elements,
