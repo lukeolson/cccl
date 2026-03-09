@@ -49,11 +49,6 @@ def bench_select_flagged(state: bench.State):
     def flag_predicate(pair):
         return np.uint8(pair[1] != 0)
 
-    flag_predicate.__annotations__ = {
-        "pair": zip_it.value_type,
-        "return": np.uint8,
-    }
-
     d_out_it = ZipIterator(d_out, d_out_flags)
 
     selector = make_select(
