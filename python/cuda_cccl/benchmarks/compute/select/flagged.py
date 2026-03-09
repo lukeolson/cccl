@@ -73,7 +73,6 @@ def bench_select_flagged(state: bench.State):
     state.add_global_memory_reads(num_elements * d_in.dtype.itemsize)
     state.add_global_memory_reads(num_elements * flags.dtype.itemsize)
     state.add_global_memory_writes(selected_elements * d_out.dtype.itemsize)
-    state.add_global_memory_writes(selected_elements * d_out_flags.dtype.itemsize)
     state.add_global_memory_writes(d_num_selected.dtype.itemsize)
 
     def launcher(launch: bench.Launch):
