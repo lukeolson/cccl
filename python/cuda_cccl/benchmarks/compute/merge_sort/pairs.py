@@ -36,8 +36,8 @@ VALUE_TYPE_MAP = INTEGER_TYPES
 
 
 def bench_merge_sort_pairs(state: bench.State):
-    key_type_str = state.get_string("KeyT")
-    value_type_str = state.get_string("ValueT")
+    key_type_str = state.get_string("KeyT{ct}")
+    value_type_str = state.get_string("ValueT{ct}")
     key_dtype = KEY_TYPE_MAP[key_type_str]
     value_dtype = VALUE_TYPE_MAP[value_type_str]
     num_elements = int(state.get_int64("Elements{io}"))
@@ -97,8 +97,8 @@ def bench_merge_sort_pairs(state: bench.State):
 if __name__ == "__main__":
     b = bench.register(bench_merge_sort_pairs)
     b.set_name("base")
-    b.add_string_axis("KeyT", list(KEY_TYPE_MAP.keys()))
-    b.add_string_axis("ValueT", list(VALUE_TYPE_MAP.keys()))
+    b.add_string_axis("KeyT{ct}", list(KEY_TYPE_MAP.keys()))
+    b.add_string_axis("ValueT{ct}", list(VALUE_TYPE_MAP.keys()))
     b.add_int64_power_of_two_axis("Elements{io}", range(16, 29, 4))
     b.add_string_axis("Entropy", ["1.000", "0.201"])
     bench.run_all_benchmarks(sys.argv)

@@ -45,7 +45,7 @@ def bench_mul(state: bench.State):
     Benchmark: b[i] = c[i] * scalar
     Unary transform with scalar multiplication.
     """
-    type_str = state.get_string("T")
+    type_str = state.get_string("T{ct}")
     dtype = TYPE_MAP[type_str]
     num_items = int(state.get_int64("Elements{io}"))
 
@@ -84,7 +84,7 @@ def bench_add(state: bench.State):
     Benchmark: c[i] = a[i] + b[i]
     Binary transform with addition.
     """
-    type_str = state.get_string("T")
+    type_str = state.get_string("T{ct}")
     dtype = TYPE_MAP[type_str]
     num_items = int(state.get_int64("Elements{io}"))
 
@@ -127,7 +127,7 @@ def bench_triad(state: bench.State):
     Benchmark: a[i] = b[i] + scalar * c[i]
     Binary transform with fused multiply-add.
     """
-    type_str = state.get_string("T")
+    type_str = state.get_string("T{ct}")
     dtype = TYPE_MAP[type_str]
     num_items = int(state.get_int64("Elements{io}"))
 
@@ -174,7 +174,7 @@ def bench_nstream(state: bench.State):
     Benchmark: a[i] = a[i] + b[i] + scalar * c[i]
     Ternary transform using ZipIterator to combine (a, b, c) as input.
     """
-    type_str = state.get_string("T")
+    type_str = state.get_string("T{ct}")
     dtype = TYPE_MAP[type_str]
     num_items = int(state.get_int64("Elements{io}"))
 
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     for name, bench_fn in BENCHMARKS.items():
         b = bench.register(bench_fn)
         b.set_name(name)
-        b.add_string_axis("T", list(TYPE_MAP.keys()))
+        b.add_string_axis("T{ct}", list(TYPE_MAP.keys()))
         b.add_int64_power_of_two_axis("Elements{io}", range(16, 33, 4))
 
     bench.run_all_benchmarks(sys.argv)

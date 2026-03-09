@@ -86,25 +86,20 @@ SUPPORTED_BENCHMARKS = [
 POW2_AXES_CPP = {"Elements", "MaxSegSize", "MaxSegmentSize", "SegmentSize", "Segments"}
 POW2_AXES_PY = {"Elements", "MaxSegSize", "MaxSegmentSize", "Segments"}
 
-# Axis name mappings from C++ to Python
-# C++ uses suffixes like {ct} (compile-time) and {io} (input/output)
-# Python uses simple names
-# Some benchmarks also have different axis names entirely
+# Axis name mappings from C++ to Python.
+# Keep type axes in their C++ form (`{ct}`) to match benchmark axis names.
 CPP_TO_PY_AXIS_MAP = {
-    # Common mappings
-    "T{ct}": "T",
-    "KeyT{ct}": "KeyT",
-    "ValueT{ct}": "ValueT",
-    # Histogram uses different name
-    "SampleT{ct}": "SampleT",
+    "T{ct}": "T{ct}",
+    "KeyT{ct}": "KeyT{ct}",
+    "ValueT{ct}": "ValueT{ct}",
+    "SampleT{ct}": "SampleT{ct}",
 }
 
 
 def strip_axis_suffix(axis_name: str) -> str:
     """Strip {ct} or {io} suffix from axis name for Python benchmarks.
 
-    e.g., "T{ct}" -> "T", "Elements{io}" -> "Elements"
-    Also handles special mappings like "SampleT{ct}" -> "T"
+    e.g., "T{ct}" -> "T{ct}", "Elements{io}" -> "Elements{io}".
     """
     if axis_name in CPP_TO_PY_AXIS_MAP:
         return CPP_TO_PY_AXIS_MAP[axis_name]

@@ -41,7 +41,7 @@ def get_upper_level(dtype, num_bins, num_elements):
 
 
 def bench_histogram_even(state: bench.State):
-    type_str = state.get_string("SampleT")
+    type_str = state.get_string("SampleT{ct}")
     dtype = TYPE_MAP[type_str]
     num_elements = int(state.get_int64("Elements{io}"))
     num_bins = int(state.get_int64("Bins"))
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     b = bench.register(bench_histogram_even)
     b.set_name("base")
 
-    b.add_string_axis("SampleT", list(TYPE_MAP.keys()))
+    b.add_string_axis("SampleT{ct}", list(TYPE_MAP.keys()))
     b.add_int64_power_of_two_axis("Elements{io}", range(16, 29, 4))
     b.add_int64_axis("Bins", [32, 128, 2048, 2097152])
     b.add_string_axis("Entropy", ["0.201", "1.000"])

@@ -103,7 +103,7 @@ def run_segmented_sort(
 
 
 def bench_segmented_sort(state: bench.State, use_power_law: bool):
-    type_str = state.get_string("KeyT")
+    type_str = state.get_string("KeyT{ct}")
     dtype = TYPE_MAP[type_str]
     num_elements = int(state.get_int64("Elements{io}"))
     alloc_stream = as_cupy_stream(state.get_stream())
@@ -160,20 +160,20 @@ def bench_segmented_sort_uniform(state: bench.State):
 if __name__ == "__main__":
     b_power = bench.register(bench_segmented_sort_power)
     b_power.set_name("power")
-    b_power.add_string_axis("KeyT", list(TYPE_MAP.keys()))
+    b_power.add_string_axis("KeyT{ct}", list(TYPE_MAP.keys()))
     b_power.add_int64_power_of_two_axis("Elements{io}", range(22, 31, 4))
     b_power.add_int64_power_of_two_axis("Segments{io}", range(12, 21, 4))
     b_power.add_string_axis("Entropy", ["1.000", "0.201"])
 
     b_small = bench.register(bench_segmented_sort_uniform)
     b_small.set_name("small")
-    b_small.add_string_axis("KeyT", list(TYPE_MAP.keys()))
+    b_small.add_string_axis("KeyT{ct}", list(TYPE_MAP.keys()))
     b_small.add_int64_power_of_two_axis("Elements{io}", range(22, 31, 4))
     b_small.add_int64_power_of_two_axis("MaxSegmentSize", range(1, 9, 1))
 
     b_large = bench.register(bench_segmented_sort_uniform)
     b_large.set_name("large")
-    b_large.add_string_axis("KeyT", list(TYPE_MAP.keys()))
+    b_large.add_string_axis("KeyT{ct}", list(TYPE_MAP.keys()))
     b_large.add_int64_power_of_two_axis("Elements{io}", range(22, 31, 4))
     b_large.add_int64_power_of_two_axis("MaxSegmentSize", range(10, 19, 2))
 

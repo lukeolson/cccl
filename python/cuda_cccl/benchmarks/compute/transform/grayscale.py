@@ -28,7 +28,7 @@ from cuda.compute import ZipIterator, make_unary_transform
 
 
 def bench_transform_grayscale(state: bench.State):
-    type_str = state.get_string("T")
+    type_str = state.get_string("T{ct}")
     dtype = TYPE_MAP[type_str]
     num_elements = int(state.get_int64("Elements{io}"))
 
@@ -74,6 +74,6 @@ def bench_transform_grayscale(state: bench.State):
 if __name__ == "__main__":
     b = bench.register(bench_transform_grayscale)
     b.set_name("grayscale")
-    b.add_string_axis("T", list(TYPE_MAP.keys()))
+    b.add_string_axis("T{ct}", list(TYPE_MAP.keys()))
     b.add_int64_power_of_two_axis("Elements{io}", range(16, 33, 4))
     bench.run_all_benchmarks(sys.argv)
