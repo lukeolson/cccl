@@ -93,6 +93,7 @@ CPP_TO_PY_AXIS_MAP = {
     "KeyT{ct}": "KeyT{ct}",
     "ValueT{ct}": "ValueT{ct}",
     "SampleT{ct}": "SampleT{ct}",
+    "Heaviness{ct}": "Heaviness{ct}",
 }
 
 

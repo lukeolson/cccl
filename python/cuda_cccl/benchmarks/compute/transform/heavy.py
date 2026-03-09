@@ -19,7 +19,7 @@ import cupy as cp
 import numba
 import numpy as np
 from numba import cuda as lang
-from utils import as_cupy_stream
+from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 import cuda.compute
@@ -103,13 +103,13 @@ _HEAVY_OPS = {
 
 def bench_heavy(state: bench.State):
     # Axes
-    n_regs = int(state.get_string("Heaviness"))
+    n_regs = int(state.get_string("Heaviness{ct}"))
     size = int(state.get_int64("Elements{io}"))
 
     try:
         alloc_stream = as_cupy_stream(state.get_stream())
         with alloc_stream:
-            d_in = cp.arange(size, dtype=np.uint32)
+            d_in = generate_data_with_entropy(size, np.uint32, "1.000", alloc_stream)
             d_out = cp.empty(size, dtype=np.uint32)
 
         op = _HEAVY_OPS[n_regs]
@@ -137,6 +137,6 @@ def bench_heavy(state: bench.State):
 if __name__ == "__main__":
     b = bench.register(bench_heavy)
     b.set_name("heavy")
-    b.add_string_axis("Heaviness", [str(v) for v in (32, 64, 128, 256)])
+    b.add_string_axis("Heaviness{ct}", [str(v) for v in (32, 64, 128, 256)])
     b.add_int64_power_of_two_axis("Elements{io}", range(16, 33, 4))
     bench.run_all_benchmarks(sys.argv)

@@ -88,12 +88,9 @@ def bench_select_if(state: bench.State):
     with alloc_stream:
         temp_storage = cp.empty(temp_storage_bytes, dtype=np.uint8)
 
-    # Get actual number of selected elements for metrics
-    num_selected = int(d_num_selected.get()[0])
-
     state.add_element_count(num_elements)
     state.add_global_memory_reads(num_elements * d_in.dtype.itemsize)
-    state.add_global_memory_writes(num_selected * d_out.dtype.itemsize)
+    state.add_global_memory_writes(selected_elements * d_out.dtype.itemsize)
     state.add_global_memory_writes(1 * d_num_selected.dtype.itemsize)
 
     def launcher(launch: bench.Launch):
