@@ -29,7 +29,7 @@ import cuda.bench as bench
 from cuda.compute import OpKind, make_unique_by_key
 
 KEY_TYPE_MAP = INTEGER_TYPES
-VALUE_TYPE_MAP = SIGNED_TYPES
+VALUE_TYPE_MAP = {**SIGNED_TYPES, "C32": np.complex64}
 
 
 def bench_unique_by_key(state: bench.State):
@@ -74,6 +74,10 @@ def bench_unique_by_key(state: bench.State):
                     size=num_elements,
                     dtype=np.int64,
                 ).astype(value_dtype)
+        elif np.issubdtype(value_dtype, np.complexfloating):
+            real = cp.random.uniform(-1, 1, size=num_elements).astype(np.float32)
+            imag = cp.random.uniform(-1, 1, size=num_elements).astype(np.float32)
+            d_in_values = (real + 1j * imag).astype(value_dtype)
         else:
             d_in_values = cp.random.uniform(-1, 1, size=num_elements).astype(
                 value_dtype

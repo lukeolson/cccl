@@ -23,7 +23,7 @@ import math
 
 import cupy as cp
 import numpy as np
-from utils import as_cupy_stream
+from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import make_binary_transform
@@ -64,8 +64,12 @@ def bench_compare_complex(state: bench.State):
     try:
         alloc_stream = as_cupy_stream(state.get_stream())
         with alloc_stream:
-            real = cp.random.random(num_elements, dtype=np.float32)
-            imag = cp.random.random(num_elements, dtype=np.float32)
+            real = generate_data_with_entropy(
+                num_elements, np.float32, "1.000", alloc_stream
+            )
+            imag = generate_data_with_entropy(
+                num_elements, np.float32, "1.000", alloc_stream
+            )
             d_in = (real + 1j * imag).astype(np.complex64)
             d_out = cp.empty(num_elements - 1, dtype=np.bool_)
     except (MemoryError, cp.cuda.memory.OutOfMemoryError):

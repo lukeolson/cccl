@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import ENTROPY_TO_PROB, as_cupy_stream, generate_data_with_entropy
+from utils import as_cupy_stream, generate_data_with_entropy
 from utils import SIGNED_TYPES as TYPE_MAP
 
 import cuda.bench as bench
@@ -33,12 +33,20 @@ def bench_select_flagged(state: bench.State):
     num_elements = int(state.get_int64("Elements{io}"))
     entropy_str = state.get_string("Entropy")
 
-    probability = ENTROPY_TO_PROB[entropy_str]
-
     alloc_stream = as_cupy_stream(state.get_stream())
     d_in = generate_data_with_entropy(num_elements, dtype, entropy_str, alloc_stream)
     with alloc_stream:
-        flags = (cp.random.random(num_elements) < probability).astype(np.uint8)
+        # Match C++ generator usage more closely: flags come from a second
+        # entropy-controlled generated sequence, then converted to bool flags.
+        d_flag_values = generate_data_with_entropy(
+            num_elements,
+            np.uint8,
+            entropy_str,
+            alloc_stream,
+            min_val=np.uint8(0),
+            max_val=np.uint8(1),
+        )
+        flags = (d_flag_values != 0).astype(np.uint8)
 
         zip_it = ZipIterator(d_in, flags)
         selected_elements = int(cp.count_nonzero(flags).get())
