@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import ALL_TYPES, as_cupy_stream, generate_data_with_entropy
+from utils import SIGNED_TYPES, as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import OpKind, make_merge_sort
@@ -30,7 +30,7 @@ from cuda.compute import OpKind, make_merge_sort
 
 def bench_merge_sort_keys(state: bench.State):
     type_str = state.get_string("T{ct}")
-    dtype = ALL_TYPES[type_str]
+    dtype = SIGNED_TYPES[type_str]
     num_elements = int(state.get_int64("Elements{io}"))
     entropy_str = state.get_string("Entropy")
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     b = bench.register(bench_merge_sort_keys)
     b.set_name("base")
 
-    b.add_string_axis("T{ct}", list(ALL_TYPES.keys()))
+    b.add_string_axis("T{ct}", list(SIGNED_TYPES.keys()))
     b.add_int64_power_of_two_axis("Elements{io}", range(16, 29, 4))
     b.add_string_axis("Entropy", ["1.000", "0.201"])
     # Note: OffsetT axis from C++ is not exposed in Python API
