@@ -104,14 +104,24 @@ def run_segmented_sort(
         state.exec(launcher, batched=False)
 
 
-def bench_segmented_sort_power(state: bench.State):
+def bench_segmented_sort(state: bench.State, use_power_law: bool):
     type_str = state.get_string("KeyT")
     dtype = TYPE_MAP[type_str]
     num_elements = int(state.get_int64("Elements{io}"))
-    num_segments = int(state.get_int64("Segments{io}"))
-    entropy_str = state.get_string("Entropy")
 
     try:
+        if use_power_law:
+            num_segments = int(state.get_int64("Segments{io}"))
+            entropy_str = state.get_string("Entropy")
+            offsets = generate_power_law_offsets(num_elements, num_segments)
+        else:
+            max_segment_size = int(state.get_int64("MaxSegmentSize"))
+            min_segment_size = max(1, max_segment_size // 2)
+            entropy_str = "1.000"
+            offsets = generate_uniform_segment_offsets(
+                num_elements, min_segment_size, max_segment_size
+            )
+
         alloc_stream = as_cupy_stream(state.get_stream())
         d_in_keys = generate_data_with_entropy(
             num_elements, dtype, entropy_str, alloc_stream
@@ -121,60 +131,10 @@ def bench_segmented_sort_power(state: bench.State):
             d_in_values = cp.arange(num_elements, dtype=dtype)
             d_out_values = cp.empty(num_elements, dtype=dtype)
 
-            offsets = generate_power_law_offsets(num_elements, num_segments)
             start_offsets = cp.asarray(offsets[:-1], dtype=np.int64)
             end_offsets = cp.asarray(offsets[1:], dtype=np.int64)
 
         alloc_stream.synchronize()
-
-        state.add_element_count(num_elements)
-        state.add_global_memory_reads(num_elements * d_in_keys.dtype.itemsize)
-        state.add_global_memory_reads(num_elements * d_in_values.dtype.itemsize)
-        state.add_global_memory_writes(num_elements * d_out_keys.dtype.itemsize)
-        state.add_global_memory_writes(num_elements * d_out_values.dtype.itemsize)
-        state.add_global_memory_reads((num_segments + 1) * start_offsets.dtype.itemsize)
-
-        run_segmented_sort(
-            state,
-            d_in_keys,
-            d_out_keys,
-            d_in_values,
-            d_out_values,
-            start_offsets,
-            end_offsets,
-            num_elements,
-            num_segments,
-        )
-    except (MemoryError, cp.cuda.memory.OutOfMemoryError):
-        state.skip("Skipping: out of memory.")
-        return
-
-
-def bench_segmented_sort_uniform(state: bench.State):
-    type_str = state.get_string("KeyT")
-    dtype = TYPE_MAP[type_str]
-    num_elements = int(state.get_int64("Elements{io}"))
-    max_segment_size = int(state.get_int64("MaxSegmentSize"))
-
-    try:
-        alloc_stream = as_cupy_stream(state.get_stream())
-        d_in_keys = generate_data_with_entropy(
-            num_elements, dtype, "1.000", alloc_stream
-        )
-        with alloc_stream:
-            d_out_keys = cp.empty(num_elements, dtype=dtype)
-            d_in_values = cp.arange(num_elements, dtype=dtype)
-            d_out_values = cp.empty(num_elements, dtype=dtype)
-
-            min_segment_size = max(1, max_segment_size // 2)
-            offsets = generate_uniform_segment_offsets(
-                num_elements, min_segment_size, max_segment_size
-            )
-            start_offsets = cp.asarray(offsets[:-1], dtype=np.int64)
-            end_offsets = cp.asarray(offsets[1:], dtype=np.int64)
-
-        alloc_stream.synchronize()
-
         num_segments = int(start_offsets.size)
 
         state.add_element_count(num_elements)
@@ -198,6 +158,14 @@ def bench_segmented_sort_uniform(state: bench.State):
     except (MemoryError, cp.cuda.memory.OutOfMemoryError):
         state.skip("Skipping: out of memory.")
         return
+
+
+def bench_segmented_sort_power(state: bench.State):
+    bench_segmented_sort(state, use_power_law=True)
+
+
+def bench_segmented_sort_uniform(state: bench.State):
+    bench_segmented_sort(state, use_power_law=False)
 
 
 if __name__ == "__main__":
