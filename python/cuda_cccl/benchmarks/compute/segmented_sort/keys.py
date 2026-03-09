@@ -108,21 +108,24 @@ def bench_segmented_sort(state: bench.State, use_power_law: bool):
     type_str = state.get_string("KeyT")
     dtype = TYPE_MAP[type_str]
     num_elements = int(state.get_int64("Elements{io}"))
+    alloc_stream = as_cupy_stream(state.get_stream())
+
+    if use_power_law:
+        num_segments = int(state.get_int64("Segments{io}"))
+        entropy_str = state.get_string("Entropy")
+    else:
+        max_segment_size = int(state.get_int64("MaxSegmentSize"))
+        min_segment_size = max(1, max_segment_size // 2)
+        entropy_str = "1.000"
 
     try:
         if use_power_law:
-            num_segments = int(state.get_int64("Segments{io}"))
-            entropy_str = state.get_string("Entropy")
             offsets = generate_power_law_offsets(num_elements, num_segments)
         else:
-            max_segment_size = int(state.get_int64("MaxSegmentSize"))
-            min_segment_size = max(1, max_segment_size // 2)
-            entropy_str = "1.000"
             offsets = generate_uniform_segment_offsets(
                 num_elements, min_segment_size, max_segment_size
             )
 
-        alloc_stream = as_cupy_stream(state.get_stream())
         d_in_keys = generate_data_with_entropy(
             num_elements, dtype, entropy_str, alloc_stream
         )
@@ -143,7 +146,11 @@ def bench_segmented_sort(state: bench.State, use_power_law: bool):
         state.add_global_memory_writes(num_elements * d_out_keys.dtype.itemsize)
         state.add_global_memory_writes(num_elements * d_out_values.dtype.itemsize)
         state.add_global_memory_reads((num_segments + 1) * start_offsets.dtype.itemsize)
+    except (MemoryError, cp.cuda.memory.OutOfMemoryError):
+        state.skip("Skipping: out of memory.")
+        return
 
+    try:
         run_segmented_sort(
             state,
             d_in_keys,
