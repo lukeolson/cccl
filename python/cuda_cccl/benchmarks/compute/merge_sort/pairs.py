@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import cupy as cp
 import numpy as np
 from utils import (
-    INTEGER_TYPES,
+    INTEGRAL_TYPES,
     SIGNED_TYPES,
     as_cupy_stream,
     generate_data_with_entropy,
@@ -32,7 +32,7 @@ import cuda.bench as bench
 from cuda.compute import OpKind, make_merge_sort
 
 KEY_TYPE_MAP = SIGNED_TYPES
-VALUE_TYPE_MAP = INTEGER_TYPES
+VALUE_TYPE_MAP = INTEGRAL_TYPES
 
 
 def bench_merge_sort_pairs(state: bench.State):

@@ -8,7 +8,7 @@ Python benchmark for fill operation using cuda.compute.ConstantIterator.
 C++ equivalent: cub/benchmarks/bench/transform/fill.cu
 
 Notes:
-- Migration: Python matches signed integer coverage (I8-I64); no tune parameters.
+- Migration: Python matches C++ integral_types (I8-I64); no tune parameters.
 """
 
 import sys
@@ -17,7 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
-from utils import INTEGER_TYPES as TYPE_MAP
+from utils import INTEGRAL_TYPES as TYPE_MAP
 from utils import as_cupy_stream
 
 import cuda.bench as bench

@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import SIGNED_TYPES as TYPE_MAP
+from utils import FUNDAMENTAL_TYPES as TYPE_MAP
 from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
@@ -48,9 +48,7 @@ def bench_radix_sort_keys(state: bench.State):
 
     alloc_stream.synchronize()
 
-    sorter = make_radix_sort(
-        d_in_keys, d_out_keys, None, None, SortOrder.ASCENDING
-    )
+    sorter = make_radix_sort(d_in_keys, d_out_keys, None, None, SortOrder.ASCENDING)
 
     temp_storage_bytes = sorter(
         None,

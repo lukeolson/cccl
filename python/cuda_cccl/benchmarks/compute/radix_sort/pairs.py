@@ -12,8 +12,8 @@ Notes:
 - Sort order is always ascending (C++ benchmark hardcodes this)
 - Keys and values are sorted together (values rearranged by key order)
 - begin_bit=0, end_bit=sizeof(KeyT)*8 (full key comparison)
-- C++ uses integral_types for keys and int8/16/32/64 for values
-- Migration: Python omits int128 values and OffsetT axis.
+- C++ uses integral_types for keys and int8/16/32/64(+int128) for values
+- Migration: Python matches C++ integral_types for both keys and values; omits int128 and OffsetT axis.
 - OffsetT axis is omitted because the Python API does not expose offset type.
 """
 
@@ -24,13 +24,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import INTEGER_TYPES, as_cupy_stream, generate_data_with_entropy
+from utils import INTEGRAL_TYPES, as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import SortOrder, make_radix_sort
 
-KEY_TYPE_MAP = INTEGER_TYPES
-VALUE_TYPE_MAP = INTEGER_TYPES
+KEY_TYPE_MAP = INTEGRAL_TYPES
+VALUE_TYPE_MAP = INTEGRAL_TYPES
 
 
 def generate_values(num_elements, dtype, stream):
@@ -53,10 +53,6 @@ def bench_radix_sort_pairs(state: bench.State):
     value_dtype = VALUE_TYPE_MAP[value_type_str]
     num_elements = int(state.get_int64("Elements{io}"))
     entropy_str = state.get_string("Entropy")
-
-    if key_dtype == np.int32 and num_elements >= 2**28:
-        state.skip("Skipping: Generates cudaErrorIllegalAddress")
-        return
 
     alloc_stream = as_cupy_stream(state.get_stream())
 

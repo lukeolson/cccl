@@ -63,7 +63,7 @@ def bench_transform_reduce_sum(state: bench.State):
         temp_storage = cp.empty(temp_storage_bytes, dtype=np.uint8)
 
     state.add_element_count(num_items)
-    state.add_global_memory_reads(num_items * d_in.dtype.itemsize)
+    state.add_global_memory_reads(num_items * d_in.dtype.itemsize, "Size")
     state.add_global_memory_writes(1 * d_out.dtype.itemsize)
 
     def launcher(launch: bench.Launch):

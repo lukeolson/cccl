@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import SIGNED_TYPES as TYPE_MAP
+from utils import FUNDAMENTAL_TYPES as TYPE_MAP
 from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
@@ -58,7 +58,7 @@ def bench_reduce_min(state: bench.State):
         temp_storage = cp.empty(temp_storage_bytes, dtype=np.uint8)
 
     state.add_element_count(num_items)
-    state.add_global_memory_reads(num_items * d_in.dtype.itemsize)
+    state.add_global_memory_reads(num_items * d_in.dtype.itemsize, "Size")
     state.add_global_memory_writes(1 * d_out.dtype.itemsize)
 
     def launcher(launch: bench.Launch):

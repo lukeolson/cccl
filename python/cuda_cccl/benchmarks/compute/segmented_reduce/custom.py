@@ -51,9 +51,7 @@ def bench_segmented_reduce_custom(state: bench.State):
     )
 
     with alloc_stream:
-        d_in = generate_data_with_entropy(
-            actual_elements, dtype, "1.000", alloc_stream
-        )
+        d_in = generate_data_with_entropy(actual_elements, dtype, "1.000", alloc_stream)
 
         d_out = cp.empty(num_segments, dtype=dtype)
 
@@ -82,9 +80,8 @@ def bench_segmented_reduce_custom(state: bench.State):
         temp_storage = cp.empty(temp_storage_bytes, dtype=np.uint8)
 
     state.add_element_count(actual_elements)
-    state.add_global_memory_reads(actual_elements * d_in.dtype.itemsize)
+    state.add_global_memory_reads(actual_elements * d_in.dtype.itemsize, "Size")
     state.add_global_memory_writes(num_segments * d_out.dtype.itemsize)
-    state.add_global_memory_reads((num_segments + 1) * start_offsets.dtype.itemsize)
 
     def launcher(launch: bench.Launch):
         reducer(

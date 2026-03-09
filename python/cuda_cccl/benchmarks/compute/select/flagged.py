@@ -9,8 +9,14 @@ C++ equivalent: cub/benchmarks/bench/select/flagged.cu
 
 Notes:
 - Uses a boolean flag array to select elements
-- Entropy controls the selection probability
-- Migration: Python omits the C++ InPlace axis but mirrors bool entropy behavior.
+- In C++, data and flags are generated from the same RNG state (correlated).
+  Python mirrors this by generating data with entropy, then deriving flags as
+  bool(data[i]) != 0, which matches the C++ `flags = generator` semantics.
+- The Python select API only supports predicate-based selection, so we use
+  ZipIterator(data, flags) with a predicate that checks the flag component.
+  This means Python also writes flags to the output, unlike C++ which only
+  writes selected T values. Metrics are adjusted to match C++ accounting.
+- Migration: Python omits InPlace and OffsetT axes.
 """
 
 import sys
@@ -20,8 +26,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import ENTROPY_TO_PROB, as_cupy_stream, generate_data_with_entropy
-from utils import SIGNED_TYPES as TYPE_MAP
+from utils import FUNDAMENTAL_TYPES as TYPE_MAP
+from utils import as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import ZipIterator, make_select
@@ -34,23 +40,24 @@ def bench_select_flagged(state: bench.State):
     entropy_str = state.get_string("Entropy")
 
     alloc_stream = as_cupy_stream(state.get_stream())
-    d_in = generate_data_with_entropy(num_elements, dtype, entropy_str, alloc_stream)
-    probability = ENTROPY_TO_PROB[entropy_str]
-    with alloc_stream:
-        # Match nvbench_helper bool generation semantics:
-        # entropy 1.000 -> all true, 0.000 -> all false, otherwise Bernoulli(p).
-        if probability <= 0.0:
-            flags = cp.zeros(num_elements, dtype=np.uint8)
-        elif probability >= 1.0:
-            flags = cp.ones(num_elements, dtype=np.uint8)
-        else:
-            flags = (cp.random.random(num_elements) < probability).astype(np.uint8)
 
-        zip_it = ZipIterator(d_in, flags)
+    # C++ generates both data and flags from the same generator:
+    #   auto generator = generate(elements, entropy);
+    #   in = generator; flags = generator;
+    # So flags[i] = bool(data[i]) -- flags are derived from the data values.
+    d_in = generate_data_with_entropy(num_elements, dtype, entropy_str, alloc_stream)
+
+    with alloc_stream:
+        # Derive flags from data, matching C++ correlated generation.
+        # In C++, the same random values are cast to bool, so flag = (value != 0).
+        flags = (d_in != 0).astype(np.uint8)
+
         selected_elements = int(cp.count_nonzero(flags).get())
         d_out = cp.empty(selected_elements, dtype=dtype)
         d_out_flags = cp.empty(selected_elements, dtype=np.uint8)
         d_num_selected = cp.empty(1, dtype=np.int64)
+
+    zip_it = ZipIterator(d_in, flags)
 
     def flag_predicate(pair):
         return np.uint8(pair[1] != 0)
@@ -75,9 +82,12 @@ def bench_select_flagged(state: bench.State):
     with alloc_stream:
         temp_storage = cp.empty(temp_storage_bytes, dtype=np.uint8)
 
+    # Metrics match C++ accounting:
+    #   reads: T * elements + bool * elements
+    #   writes: T * selected_elements + OffsetT * 1
     state.add_element_count(num_elements)
     state.add_global_memory_reads(num_elements * d_in.dtype.itemsize)
-    state.add_global_memory_reads(num_elements * flags.dtype.itemsize)
+    state.add_global_memory_reads(num_elements * np.dtype(np.bool_).itemsize)
     state.add_global_memory_writes(selected_elements * d_out.dtype.itemsize)
     state.add_global_memory_writes(d_num_selected.dtype.itemsize)
 

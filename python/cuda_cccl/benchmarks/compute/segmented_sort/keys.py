@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import cupy as cp
 import numpy as np
 from utils import (
-    SIGNED_TYPES as TYPE_MAP,
+    FUNDAMENTAL_TYPES as TYPE_MAP,
 )
 from utils import (
     as_cupy_stream,
@@ -123,7 +123,9 @@ def bench_segmented_sort(state: bench.State, use_power_law: bool):
             num_elements, min_segment_size, max_segment_size
         )
 
-    d_in_keys = generate_data_with_entropy(num_elements, dtype, entropy_str, alloc_stream)
+    d_in_keys = generate_data_with_entropy(
+        num_elements, dtype, entropy_str, alloc_stream
+    )
     with alloc_stream:
         d_out_keys = cp.empty(num_elements, dtype=dtype)
 

@@ -20,6 +20,13 @@ SIGNED_TYPES = {k: ALL_TYPES[k] for k in ("I8", "I16", "I32", "I64", "F32", "F64
 INTEGER_TYPES = {k: ALL_TYPES[k] for k in ("I8", "I16", "I32", "I64")}
 FLOAT_TYPES = {k: ALL_TYPES[k] for k in ("F32", "F64")}
 
+# Matches C++ integral_types = {int8_t, int16_t, int32_t, int64_t}
+INTEGRAL_TYPES = {k: ALL_TYPES[k] for k in ("I8", "I16", "I32", "I64")}
+
+# Matches C++ fundamental_types = {int8..int64, [int128,] float, double}
+# int128 is excluded because it is not supported by numpy/cupy.
+FUNDAMENTAL_TYPES = {k: ALL_TYPES[k] for k in ("I8", "I16", "I32", "I64", "F32", "F64")}
+
 ENTROPY_TO_STEPS = {
     "1.000": 0,
     "0.811": 1,

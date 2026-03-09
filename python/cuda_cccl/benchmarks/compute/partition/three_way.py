@@ -13,8 +13,8 @@ Notes:
   - First partition: items < left_border (max/3)
   - Second partition: items < right_border (max*2/3)
   - Third partition (unselected): items >= right_border
-- T axis covers fundamental types
-- Migration: Python mirrors min/max borders but omits OffsetT axis.
+- T axis covers fundamental types (C++ fundamental_types minus int128)
+- Migration: Python uses FUNDAMENTAL_TYPES; omits OffsetT axis.
 - OffsetT axis is omitted because the Python API does not expose offset type.
 """
 
@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cupy as cp
 import numpy as np
-from utils import SIGNED_TYPES, as_cupy_stream, generate_data_with_entropy
+from utils import FUNDAMENTAL_TYPES, as_cupy_stream, generate_data_with_entropy
 
 import cuda.bench as bench
 from cuda.compute import make_three_way_partition
@@ -33,7 +33,7 @@ from cuda.compute import make_three_way_partition
 
 def bench_three_way_partition(state: bench.State):
     type_str = state.get_string("T{ct}")
-    dtype = SIGNED_TYPES[type_str]
+    dtype = FUNDAMENTAL_TYPES[type_str]
     num_elements = int(state.get_int64("Elements{io}"))
     entropy_str = state.get_string("Entropy")
 
@@ -106,7 +106,8 @@ def bench_three_way_partition(state: bench.State):
     state.add_element_count(num_elements)
     state.add_global_memory_reads(num_elements * d_in.dtype.itemsize)
     state.add_global_memory_writes(num_elements * d_in.dtype.itemsize)
-    state.add_global_memory_writes(d_num_selected_out.nbytes)
+    # C++ reports add_global_memory_writes<offset_t>(1) — 1 element of offset type.
+    state.add_global_memory_writes(1 * d_num_selected_out.dtype.itemsize)
 
     def launcher(launch: bench.Launch):
         partitioner(
@@ -129,7 +130,7 @@ if __name__ == "__main__":
     b = bench.register(bench_three_way_partition)
     b.set_name("base")
 
-    b.add_string_axis("T{ct}", list(SIGNED_TYPES.keys()))
+    b.add_string_axis("T{ct}", list(FUNDAMENTAL_TYPES.keys()))
     b.add_int64_power_of_two_axis("Elements{io}", range(16, 29, 4))
     b.add_string_axis("Entropy", ["1.000", "0.544", "0.000"])
     # Note: OffsetT axis from C++ is not exposed in Python API
