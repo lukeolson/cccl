@@ -16,13 +16,11 @@
 // When compiling with nvcc + nvc++ on amd64, the compilation fails due to nvcc not supporting some AVX512 F16 builtins
 // that are used in <immintrin.h>. We can workaround this by pre-including only the relevant mmintrin headers and
 // suppressing <immintrin.h> inclusion by TBB.
-#if _CCCL_ARCH(X86_64) && _CCCL_COMPILER(NVHPC) && _CCCL_CUDA_COMPILER(NVCC) \
-  && __has_include(<oneapi/tbb/detail/_machine.h>)
+#if _CCCL_ARCH(X86_64) && _CCCL_COMPILER(NVHPC)
 #  include <mmintrin.h>
 #  include <xmmintrin.h>
 
 #  define _IMMINTRIN_H_INCLUDED
 #  include <oneapi/tbb/detail/_machine.h>
 #  undef _IMMINTRIN_H_INCLUDED
-#endif // _CCCL_ARCH(X86_64) && _CCCL_COMPILER(NVHPC) && _CCCL_CUDA_COMPILER(NVCC) &&
-       // __has_include(<oneapi/tbb/detail/_machine.h>)
+#endif // _CCCL_ARCH(X86_64) && _CCCL_COMPILER(NVHPC)
