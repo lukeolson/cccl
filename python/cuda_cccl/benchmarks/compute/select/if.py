@@ -26,10 +26,12 @@ import cupy as cp
 import numpy as np
 from utils import (
     ENTROPY_TO_PROB,
-    FUNDAMENTAL_TYPES as TYPE_MAP,
     as_cupy_stream,
     generate_data_with_entropy,
     lerp_min_max,
+)
+from utils import (
+    FUNDAMENTAL_TYPES as TYPE_MAP,
 )
 
 import cuda.bench as bench
